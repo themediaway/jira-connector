@@ -128,6 +128,21 @@ function ProjectClient(jiraClient) {
     };
 
     /**
+     * Get all issue types with valid status values for a project
+     *
+     * @method getStatuses
+     * @memberOf ProjectClient#
+     * @param opts The request options sent to the Jira API.
+     * @param opts.projectIdOrKey The project id or project key
+     * @param [callback] Called when the statuses have been retrieved.
+     * @return {Promise} Resolved when the statuses have been retrieved.
+     */
+    this.getProjectWorFlows = function (opts, callback) {
+        var options = this.buildV1Options(opts, '/projectconfig/1/workflowscheme/'+ opts.projectIdOrKey, 'GET');
+        return this.jiraClient.makeRequest(options, callback);
+    };
+
+    /**
      * Contains a full representation of a the specified project's versions.
      *
      * @method getVersions
@@ -249,6 +264,40 @@ function ProjectClient(jiraClient) {
 
         return {
             uri: this.jiraClient.buildURL(basePath + path),
+            method: method,
+            body: body,
+            qs: qs,
+            followAllRedirects: true,
+            json: true
+        };
+    };
+
+    this.buildV1Options = function (opts, path, method, body, qs) {
+        opts = opts || {};
+
+        var basePath = opts.projectIdOrKey ? '/projectconfig/1/workflowscheme/' + opts.projectIdOrKey : '/projectconfig/1/workflowscheme';
+
+        if (!qs) qs = {};
+        if (!body) body = {};
+
+        if (opts.fields) {
+            qs.fields = '';
+            opts.fields.forEach(function (field) {
+                qs.fields += field + ','
+            });
+            qs.fields = qs.fields.slice(0, -1);
+        }
+
+        if (opts.expand) {
+            qs.expand = '';
+            opts.expand.forEach(function (ex) {
+                qs.expand += ex + ','
+            });
+            qs.expand = qs.expand.slice(0, -1);
+        }
+
+        return {
+            uri: this.jiraClient.buildV1URL(basePath ),
             method: method,
             body: body,
             qs: qs,
